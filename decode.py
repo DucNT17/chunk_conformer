@@ -79,8 +79,8 @@ def endless_decode(args, model, char_dict):
     # waveform = padding(waveform, sample_rate)
     xs = kaldi.fbank(waveform,
                             num_mel_bins=80,
-                            frame_length=25,
-                            frame_shift=10,
+                            frame_length=2.5,
+                            frame_shift=1,
                             dither=0.0,
                             energy_floor=0.0,
                             sample_frequency=16000).unsqueeze(0)
