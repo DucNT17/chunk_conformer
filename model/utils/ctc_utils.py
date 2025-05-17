@@ -38,6 +38,25 @@ def get_output(hyps, char_dict):
     return decodes
 
 
+def get_output_2(hyps, char_dict, beam_search_decoder=None):
+    """
+    hyps: List of (T, vocab_size) tensors (logits or log_probs)
+    beam_search_decoder: Optional beam search decoder with LM
+    """
+    decodes = []
+    for hyp in hyps:
+        if beam_search_decoder is not None:
+            # Convert to CPU and numpy for decoder
+            hyp_np = hyp.cpu().numpy()
+            result = beam_search_decoder.decode(hyp_np)
+            decoded_text = result[0][0]  # Best beam
+        else:
+            hyp = remove_duplicates_and_blank(hyp.argmax(dim=-1))
+            decoded_text = class2str(hyp, char_dict)
+        decodes.append(decoded_text)
+    return decodes
+
+
 def get_output_with_timestamps(hyps, char_dict):
     decodes = []
     max_silence = 20

@@ -16,6 +16,15 @@ from model.utils.file_utils import read_symbol_table
 from model.utils.ctc_utils import get_output_with_timestamps, get_output
 from contextlib import nullcontext
 from pydub import AudioSegment
+from pyctcencoder import build_ctcdecoder
+
+def build_beam_decoder(char_dict, kenlm_model_path=None):
+    vocab_list = [char_dict[i] for i in range(len(char_dict))]
+    decoder = build_ctcdecoder(
+        labels=vocab_list,
+        kenlm_model_path=kenlm_model_path
+    )
+    return decoder
 
 @torch.no_grad()
 def init(model_checkpoint, device):
@@ -127,7 +136,7 @@ def endless_decode(args, model, char_dict):
 
 
 @torch.no_grad()
-def batch_decode(args, model, char_dict):
+def batch_decode(args, model, char_dict, beam_search_decoder=None):
     df = pd.read_csv(args.audio_list, sep="\t")
 
     max_length_limited_context = args.total_batch_duration
@@ -167,9 +176,9 @@ def batch_decode(args, model, char_dict):
             )
 
             hyps = model.encoder.ctc_forward(encoder_outs, encoder_lens, n_chunks)
-            decodes += get_output(hyps, char_dict)
-                                         
+            decodes += get_output(hyps, char_dict, beam_search_decoder=beam_search_decoder)
 
+                                         
             # reset
             xs = []
             xs_origin_lens = []
@@ -187,7 +196,9 @@ def batch_decode(args, model, char_dict):
 def main():
     # Create argument parser
     parser = argparse.ArgumentParser(description="Process arguments with default values.")
-
+    beam_search_decoder = None
+    if args.kenlm_path is not None:
+        beam_search_decoder = build_beam_decoder(char_dict, args.kenlm_path)
     # Add arguments with default values
     parser.add_argument(
         "--model_checkpoint", 
@@ -251,6 +262,13 @@ def main():
         help="Dtype for autocast. If not provided, autocast is disabled by default."
     )
 
+    parser.add_argument(
+        "--kenlm_path", 
+        type=str,
+        default=None,
+        help="Path to KenLM binary model (.arpa or .bin)"
+    )
+    
     # Parse arguments
     args = parser.parse_args()
     device = torch.device(args.device)
@@ -274,7 +292,7 @@ def main():
         if args.long_form_audio:
             endless_decode(args, model, char_dict)
         else:
-            batch_decode(args, model, char_dict)
+            batch_decode(args, model, char_dict, beam_search_decoder)
 
 if __name__ == "__main__":
     main()
