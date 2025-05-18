@@ -16,7 +16,7 @@ from model.utils.file_utils import read_symbol_table
 from model.utils.ctc_utils import get_output_with_timestamps, get_output, get_output_2
 from contextlib import nullcontext
 from pydub import AudioSegment
-from pyctcencoder import build_ctcdecoder
+from pyctcdecode import build_ctcdecoder
 
 def build_beam_decoder(char_dict, kenlm_model_path=None):
     vocab_list = [char_dict[i] for i in range(len(char_dict))]
