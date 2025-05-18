@@ -13,7 +13,7 @@ import torchaudio.compliance.kaldi as kaldi
 from model.utils.init_model import init_model
 from model.utils.checkpoint import load_checkpoint
 from model.utils.file_utils import read_symbol_table
-from model.utils.ctc_utils import get_output_with_timestamps, get_output
+from model.utils.ctc_utils import get_output_with_timestamps, get_output, get_output_2
 from contextlib import nullcontext
 from pydub import AudioSegment
 from pyctcencoder import build_ctcdecoder
@@ -175,8 +175,8 @@ def batch_decode(args, model, char_dict, beam_search_decoder=None):
                                                                         offset=offset
             )
 
-            hyps = model.encoder.ctc_forward(encoder_outs, encoder_lens, n_chunks)
-            decodes += get_output(hyps, char_dict, beam_search_decoder=beam_search_decoder)
+            hyps = model.encoder.ctc_forward(encoder_outs, encoder_lens, 7)
+            decodes += get_output_2(hyps, char_dict, beam_search_decoder=beam_search_decoder)
 
                                          
             # reset
