@@ -196,9 +196,7 @@ def batch_decode(args, model, char_dict, beam_search_decoder=None):
 def main():
     # Create argument parser
     parser = argparse.ArgumentParser(description="Process arguments with default values.")
-    beam_search_decoder = None
-    if args.kenlm_path is not None:
-        beam_search_decoder = build_beam_decoder(char_dict, args.kenlm_path)
+
     # Add arguments with default values
     parser.add_argument(
         "--model_checkpoint", 
@@ -286,7 +284,9 @@ def main():
     
     assert args.model_checkpoint is not None, "You must specify the path to the model"
     assert args.long_form_audio or args.audio_list, "`long_form_audio` or `audio_list` must be activated"
-
+    beam_search_decoder = None
+    if args.kenlm_path is not None:
+        beam_search_decoder = build_beam_decoder(char_dict, args.kenlm_path)
     model, char_dict = init(args.model_checkpoint, device)
     with torch.autocast(device.type, dtype) if dtype is not None else nullcontext():
         if args.long_form_audio:
